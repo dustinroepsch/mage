@@ -28,23 +28,23 @@
 package mage.cards.l;
 
 import mage.MageInt;
-import mage.abilities.Ability;
 import mage.abilities.common.BeginningOfUpkeepTriggeredAbility;
 import mage.abilities.common.EntersBattlefieldTappedAbility;
 import mage.abilities.common.SimpleStaticAbility;
-import mage.abilities.costs.common.SacrificeAllCost;
 import mage.abilities.costs.common.SacrificeTargetCost;
-import mage.abilities.costs.common.SacrificeXTargetCost;
 import mage.abilities.effects.PayCostToAttackBlockEffectImpl;
-import mage.abilities.effects.common.*;
+import mage.abilities.effects.common.DoIfCostPaid;
+import mage.abilities.effects.common.DontUntapInControllersUntapStepSourceEffect;
+import mage.abilities.effects.common.UntapSourceEffect;
+import mage.abilities.effects.common.combat.CantAttackBlockUnlessPaysSourceEffect;
 import mage.abilities.keyword.TrampleAbility;
 import mage.cards.CardImpl;
 import mage.cards.CardSetInfo;
-import mage.constants.*;
+import mage.constants.CardType;
+import mage.constants.TargetController;
+import mage.constants.Zone;
 import mage.filter.common.FilterControlledLandPermanent;
 import mage.filter.predicate.mageobject.SubtypePredicate;
-import mage.game.Game;
-import mage.game.events.GameEvent;
 import mage.target.common.TargetControlledPermanent;
 
 import java.util.UUID;
@@ -83,10 +83,10 @@ public class Leviathan extends CardImpl {
 
 
         // Leviathan can't attack unless you sacrifice two Islands.
-        this.addAbility(new SimpleStaticAbility(
-                Zone.BATTLEFIELD,
-                new LeviathanCostToAttackEffect()
-        ));
+        this.addAbility(new SimpleStaticAbility(Zone.BATTLEFIELD, new CantAttackBlockUnlessPaysSourceEffect(
+                new SacrificeTargetCost(new TargetControlledPermanent(2, 2, filter, true)),
+                PayCostToAttackBlockEffectImpl.RestrictType.ATTACK
+        )));
     }
 
     public Leviathan(final Leviathan card) {
@@ -99,30 +99,3 @@ public class Leviathan extends CardImpl {
     }
 }
 
-class LeviathanCostToAttackEffect extends PayCostToAttackBlockEffectImpl {
-    private static final FilterControlledLandPermanent filter = new FilterControlledLandPermanent("two Islands");
-
-    static {
-        filter.add(new SubtypePredicate("Island"));
-    }
-
-    LeviathanCostToAttackEffect() {
-        super(Duration.WhileOnBattlefield, Outcome.Detriment, RestrictType.ATTACK,
-                new SacrificeTargetCost(new TargetControlledPermanent(2, 2, filter, true))
-        );
-    }
-
-    public LeviathanCostToAttackEffect(LeviathanCostToAttackEffect effect) {
-        super(effect);
-    }
-
-    @Override
-    public boolean applies(GameEvent event, Ability source, Game game) {
-        return source.getSourceId().equals(event.getSourceId());
-    }
-
-    @Override
-    public LeviathanCostToAttackEffect copy() {
-        return new LeviathanCostToAttackEffect(this);
-    }
-}
